@@ -1,1 +1,32 @@
 ---
+- hosts: leader
+  become: true
+tasks:
+  - name: initialize the k8 cluster
+    ansible.builtin.shell: kubeadm init --pod-network-cidr 192.168.0.0/16 --kubernetes-version 1.22.0 >> cluster_initialized.txt
+    args:
+      chdir: $HOME
+      creates: cluster_initialized.txt
+
+  - name: create .kube
+    ansible.builtin.file:
+      state: directory
+      path: /home/ubuntu/.kube
+
+  - name: copying over admin config
+    ansible.builtin.copy:
+      src: /etc/kubernetes/admin.conf
+      dest: /home/ubuntu/.kube/config
+      remote_src: true
+      owner: ubuntu
+
+  - name: installing calico networking
+    ansible.builtin.command: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+
+  - name: testing access to cluster
+    ansible.builtin.command: kubectl get nodes
+    register: get_nodes
+
+  - name: printing get_nodes
+    ansible.builtin.debug:
+      msg: {{ get_nodes }}
