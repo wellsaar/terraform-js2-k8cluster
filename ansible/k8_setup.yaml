@@ -1,0 +1,94 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+    - name: setting up containerd
+      ansible.builtin.blockinfile:
+        path: /etc/modules-load.d/containerd.config
+        insertafter: EOF
+        block: |
+          overlay
+          br_netfilter
+    - name: Loading kernal modules
+      ansible.builtin.command:
+      argv:
+        - modprobe overlay
+        - modprobe br_netfilter
+
+    - name: Setting up Networking for K8s
+      ansible.posix.sysctl:
+        sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+        name: "{{ item }}"
+        value: '1'
+        reload: yes
+      loop:
+        - net.ipv4.ip_forward
+        - net.bridge.bridge-nf-call-iptables
+        - net.bridge.bridge-nf-call-ip6tables
+
+    - name: Installing containerd and k8 dependencies
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - containerd
+        - apt-transport-https
+        - curl
+
+
+    - name: creating /etc/containerd
+      ansible.builtin.file:
+        path: /etc/containerd
+        state: touch
+
+    - name: Setting default config for containerd
+      ansible.builtin.shell: "containerd config default > /etc/containerd/config.toml"
+
+    - name: restarting containerd
+      ansible.builtin.service:
+        name: containerd
+        state: restarted
+
+    - name: turning off swap
+      ansible.builtin.shell: "swapoff -a"
+
+    - name: Adding K8 apt key
+      ansible.builtin.apt_key:
+        id: 59FE0256827269DC81578F928B57C5C2836F4BEB
+        state: present
+
+    - name: Adding K8 repo (kubernetes-xenial)
+      ansible.builtin.apt_repository:
+        repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+
+    - name: Installing K8 packages
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      with_items:
+        - kubelet=1.22.0-00
+        - kubeadm=1.22.0-00
+        - kubectl=1.22.0-00
+
+    - name: Changing docker driver to systemd
+      ansible.builtin.blockinfile:
+        path: /etc/docker/daemon.json
+        insertafter: EOF
+        block: |
+        ""{
+        "exec-opts": ["native.cgroupdriver=systemd"],
+        "log-driver": "json-file",
+        "log-opts": {
+        "max-size": "100m"
+        },
+        "storage-driver": "overlay2"
+        }""
+    - name: restarting docker and kubeadm
+      ansible.builtin.command:
+        argv:
+          - systemctl daemon-reload
+          - systemctl restart docker
+          - kubeadm reset
