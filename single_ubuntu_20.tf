@@ -33,13 +33,3 @@ resource "openstack_compute_floatingip_associate_v2" "terraform_floatubntu20" {
   instance_id = "${openstack_compute_instance_v2.Ubuntu20[count.index].id}"
     count     = var.vm_number
 }
-
-################
-#Output
-################
-
-
-output "floating_ip_ubuntu20" {
-  value = openstack_networking_floatingip_v2.terraform_floatip_ubuntu20.*.address
-  description = "Public IP for Ubuntu 20"
-}
