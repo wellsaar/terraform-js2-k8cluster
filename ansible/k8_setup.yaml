@@ -101,5 +101,6 @@
         daemon_reload: true
         name: docker
 
-    - name: restarting docker and kubeadm
-      ansible.builtin.command: kubeadm reset
+    - name: restarting kubeadm
+      ansible.builtin.shell:
+        cmd: kubeadm reset -f
