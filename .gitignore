@@ -32,3 +32,4 @@ override.tf.json
 #DONT PUT CREDS IN GIT
 *openrc.sh
 *.sh
+*inventory.ini
