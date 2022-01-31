@@ -1,0 +1,8 @@
+[leader]
+%{ for ip in ansible_leader_ip }
+${ip} ansible_connection=ssh        ansible_user=ubuntu
+%{ endfor ~}
+[follower]
+%{ for ip in ansible_follower_ip}
+${ip} ansible_connection=ssh        ansible_user=ubuntu
+%{ endfor ~}
