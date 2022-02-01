@@ -8,7 +8,7 @@ resource "openstack_compute_instance_v2" "Ubuntu20_leader" {
   # ID of JS-API-Featured-Ubuntu20-Latest
   image_id  = "8f27559a-9e63-4fb7-9704-09526793e2d2"
   flavor_id   = 3
-  # this public key is set above in security section
+  # you'll need to set this to your public key name on jetstream
   key_pair  = "wellsaar"
   security_groups   = ["terraform_ssh_ping", "default"]
   metadata = {
