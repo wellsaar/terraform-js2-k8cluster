@@ -13,6 +13,7 @@
       become: true
       ansible.builtin.shell: " {{ item.stdout }}"
       loop: "{{ k8_join_command.results }}"
+
 - hosts: leader
 
   tasks:
