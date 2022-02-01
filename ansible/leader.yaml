@@ -1,6 +1,5 @@
 ---
 - hosts: leader
-  become: true
   tasks:
     - name: initialize the k8 cluster
       ansible.builtin.shell: kubeadm init --pod-network-cidr 192.168.0.0/16 >> cluster_initialized.txt
@@ -22,13 +21,11 @@
 
     - name: installing calico networking
       ansible.builtin.command: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
-      become_user: ubuntu
 
 
     - name: testing access to cluster
       ansible.builtin.command: kubectl get nodes
       register: get_nodes
-      become_user: ubuntu
 
     - name: printing get_nodes
       ansible.builtin.debug:
