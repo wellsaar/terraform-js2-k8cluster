@@ -9,9 +9,6 @@
       register: k8_join_command
       run_once: true
 
-    - ansible.builtin.debug:
-        var: k8_join_command
-
     - name: joining cluster
       become: true
       ansible.builtin.shell: " {{ item.stdout }}"
