@@ -1,1 +1,26 @@
 ---
+- hosts: follower
+
+  tasks:
+    - name: get kubeadm token from leader
+      ansible.builtin.shell: kubeadm token create --print-join-command
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['leader'] }}"
+      register: k8_join_command
+      run_once: true
+
+    - ansible.builtin.debug:
+        var: k8_join_command
+
+    - name: joining cluster
+      become: true
+      ansible.builtin.shell: " {{ item.stdout }}"
+      loop: "{{ k8_join_command.results }}"
+- hosts: leader
+
+  tasks:
+
+    - name: testing access to cluster
+      ansible.builtin.shell: kubectl get nodes
+      register: get_nodes
+      become_user: ubuntu
