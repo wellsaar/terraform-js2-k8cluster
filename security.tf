@@ -21,9 +21,9 @@ resource "openstack_compute_secgroup_v2" "terraform_ssh_ping_centos" {
   }
 
 }
-# #public key that will be installed in the .authorized_keys file on the vm
-# resource "openstack_compute_keypair_v2" "keypair" {
-#   name       = "my_public_key"
-#   # you will need to paste your public key string here
-#   public_key = ""
-# }
+#public key that will be installed in the .authorized_keys file on the vm
+resource "openstack_compute_keypair_v2" "keypair" {
+  name       = "my_public_key"
+  # you will need to paste your public key string here
+  public_key = ""
+}
