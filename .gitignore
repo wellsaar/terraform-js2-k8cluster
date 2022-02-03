@@ -33,3 +33,5 @@ override.tf.json
 *openrc.sh
 *.sh
 *inventory.ini
+# ignore ansible.cfg for testing
+ansible.cfg
