@@ -3,7 +3,7 @@
 ################
 #creating the virtual network
 resource "openstack_networking_network_v2" "terraform_network" {
-  name = "terraform_network"
+  name = "terraform_network_${var.public_key}"
   admin_state_up  = "true"
 }
 
@@ -16,10 +16,10 @@ resource "openstack_networking_subnet_v2" "terraform_subnet1" {
 }
 # setting up virtual router
 resource "openstack_networking_router_v2" "terraform_router" {
-  name = "terraform_router"
+  name = "terraform_router_${var.public_key}"
   admin_state_up  = true
   # id of public network at IU
-  external_network_id = "4367cd20-722f-4dc2-97e8-90d98c25f12e"
+  external_network_id = "3fe22c05-6206-4db2-9a13-44f04b6796e6"
 }
 # setting up virtual router interface
 resource "openstack_networking_router_interface_v2" "terraform_router_interface_1" {
