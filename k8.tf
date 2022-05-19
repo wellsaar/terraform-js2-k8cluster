@@ -6,7 +6,7 @@
 resource "openstack_compute_instance_v2" "Ubuntu20_leader" {
   name = "terraform_Ubuntu20_leader"
   # ID of JS-API-Featured-Ubuntu20-Latest
-  image_id  = "8f27559a-9e63-4fb7-9704-09526793e2d2"
+  image_id  = "69b7fce4-3bfd-467e-bc5e-13e08ac44490"
   flavor_id   = 3
   # you'll need to set this to your public key name on jetstream
   key_pair  = var.public_key
@@ -38,7 +38,7 @@ resource "openstack_compute_floatingip_associate_v2" "terraform_floatubntu20_lea
 resource "openstack_compute_instance_v2" "Ubuntu20_follower" {
   name = "terraform_Ubuntu20_follower${count.index}"
   # ID of JS-API-Featured-Ubuntu20-Latest
-  image_id  = "8f27559a-9e63-4fb7-9704-09526793e2d2"
+  image_id  = "69b7fce4-3bfd-467e-bc5e-13e08ac44490"
   flavor_id   = 2
   # this public key is set above in security section
   key_pair  = var.public_key
@@ -65,4 +65,44 @@ resource "openstack_compute_floatingip_associate_v2" "terraform_floatubntu20_fol
   floating_ip = "${openstack_networking_floatingip_v2.terraform_floatip_ubuntu20_follower[count.index].address}"
   instance_id = "${openstack_compute_instance_v2.Ubuntu20_follower[count.index].id}"
     count     = var.vm_number
+}
+
+resource "null_resource" "ansible_provisioners" {
+  provisioner "remote-exec" {
+    inline = [
+      "echo \"Checking if cloud init is running\"",
+      "sudo cloud-init status --wait",
+      "sudo apt update",
+      "sudo apt install python3 ansible -y",
+      "rm -rf ~/ansible"
+    ]
+      connection {
+        type = "ssh"
+        host = "${openstack_networking_floatingip_v2.terraform_floatip_ubuntu20_leader.address}"
+        user = "ubuntu"
+      }
+  }
+  provisioner "file" {
+    source = "ansible"
+    destination = "ansible"
+  }
+      connection {
+        type = "ssh"
+        host = "${openstack_networking_floatingip_v2.terraform_floatip_ubuntu20_leader.address}"
+        user = "ubuntu"
+      }
+  provisioner "remote-exec" {
+    inline = [
+      "ANSIBLE_HOST_KEY_CHECKING=false ansible-playbook -i ansible/inventory.ini ansible/k8_setup.yaml ",
+      "ANSIBLE_HOST_KEY_CHECKING=false ansible-playbook -i ansible/inventory.ini ansible/leader.yaml ",
+      "ANSIBLE_HOST_KEY_CHECKING=false ansible-playbook -i ansible/inventory.ini ansible/follower.yaml "
+    ]
+      connection {
+        type = "ssh"
+        host = "${openstack_networking_floatingip_v2.terraform_floatip_ubuntu20_leader.address}"
+        user = "ubuntu"
+      }
+    }
+
+  depends_on = [openstack_compute_floatingip_associate_v2.terraform_floatubntu20_leader]
 }
