@@ -2,19 +2,19 @@
 - hosts: leader
   tasks:
     - name: initialize the k8 cluster
-      ansible.builtin.shell: kubeadm init --pod-network-cidr 192.168.0.0/16 >> cluster_initialized.txt
+      shell: kubeadm init --pod-network-cidr 192.168.0.0/16 >> cluster_initialized.txt
       become: true
       args:
-        chdir: $HOME
+        chdir: /home/ubuntu/
         creates: cluster_initialized.txt
 
     - name: create .kube
-      ansible.builtin.file:
+      file:
         state: directory
         path: /home/ubuntu/.kube
 
     - name: copying over admin config
-      ansible.builtin.copy:
+      copy:
         src: /etc/kubernetes/admin.conf
         dest: /home/ubuntu/.kube/config
         remote_src: true
@@ -23,17 +23,16 @@
       become: true
 
     - name: installing calico networking
-      ansible.builtin.command: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
-
+      command: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
 
     - name: testing access to cluster
-      ansible.builtin.command: kubectl get nodes
+      command: kubectl get nodes
       register: get_nodes
 
     - name: printing get_nodes
-      ansible.builtin.debug:
+      debug:
         msg: "{{ get_nodes }}"
 
     - name: getting cluster join token
-      ansible.builtin.shell: kubeadm token create --print-join-command
+      shell: kubeadm token create --print-join-command
       register: k8_join_command

@@ -3,28 +3,32 @@
   become: true
 
   tasks:
+    - name: Updating apt-cache
+      apt:
+        update_cache: true
+
     - name: creating containerd.config
-      ansible.builtin.file:
+      file:
         path: /etc/modules-load.d/containerd.config
         state: touch
 
     - name: setting up containerd
-      ansible.builtin.blockinfile:
+      blockinfile:
         path: /etc/modules-load.d/containerd.config
         insertafter: EOF
         block: |
           overlay
           br_netfilter
     - name: Loading kernal modules
-      ansible.builtin.shell:
+      shell:
         cmd: /usr/sbin/modprobe overlay
 
     - name: Loading kernal modules
-      ansible.builtin.shell:
+      shell:
         cmd: /usr/sbin/modprobe br_netfilter
 
     - name: Setting up Networking for K8s
-      ansible.posix.sysctl:
+      sysctl:
         sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
         name: "{{ item }}"
         value: '1'
@@ -35,72 +39,64 @@
         - net.bridge.bridge-nf-call-ip6tables
 
     - name: Installing containerd and k8 dependencies
-      ansible.builtin.apt:
-        name: "{{ item }}"
+      apt:
+        name: [containerd, apt-transport-https, curl]
         state: present
-      loop:
-        - containerd
-        - apt-transport-https
-        - curl
-
 
     - name: creating /etc/containerd
-      ansible.builtin.file:
+      file:
         path: /etc/containerd
         state: directory
 
     - name: creating containerd/config.toml
-      ansible.builtin.file:
+      file:
         path: /etc/containerd/config.toml
         state: touch
 
     - name: Setting default config for containerd
-      ansible.builtin.shell: "containerd config default > /etc/containerd/config.toml"
+      shell: "containerd config default > /etc/containerd/config.toml"
 
     - name: restarting containerd
-      ansible.builtin.service:
+      service:
         name: containerd
         state: restarted
 
     - name: turning off swap
-      ansible.builtin.shell: "swapoff -a"
+      shell: "swapoff -a"
 
     - name: Adding K8 apt key
-      ansible.builtin.apt_key:
+      apt_key:
         url: https://packages.cloud.google.com/apt/doc/apt-key.gpg.asc
         state: present
 
     - name: Adding K8 repo (kubernetes-xenial)
-      ansible.builtin.apt_repository:
+      apt_repository:
         repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
         state: present
 
     - name: Installing K8 packages
-      ansible.builtin.apt:
-        name: "{{ item }}"
+      apt:
+        name: [kubelet, kubeadm, kubectl]
         state: present
         update_cache: true
-      with_items:
-        - kubelet
-        - kubeadm
-        - kubectl
+
     - name: creating /etc/docker/daemon.json
-      ansible.builtin.file:
+      file:
         path: /etc/docker/daemon.json
         state: touch
 
     - name: Changing docker driver to systemd
-      ansible.builtin.copy:
+      copy:
         dest: /etc/docker/daemon.json
         src: daemon.json
         backup: true
 
     - name: reloading systemctl daemon and restarting docker
-      ansible.builtin.systemd:
+      systemd:
         state: restarted
         daemon_reload: true
         name: docker
 
     - name: restarting kubeadm
-      ansible.builtin.shell:
+      shell:
         cmd: kubeadm reset -f
