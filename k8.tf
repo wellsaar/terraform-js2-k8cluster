@@ -9,7 +9,7 @@ resource "openstack_compute_instance_v2" "Ubuntu20_leader" {
   image_id  = "8f27559a-9e63-4fb7-9704-09526793e2d2"
   flavor_id   = 3
   # you'll need to set this to your public key name on jetstream
-  key_pair  = "wellsaar"
+  key_pair  = var.public_key
   security_groups   = ["terraform_ssh_ping", "default"]
   metadata = {
     terraform_controlled = "yes"
@@ -41,7 +41,7 @@ resource "openstack_compute_instance_v2" "Ubuntu20_follower" {
   image_id  = "8f27559a-9e63-4fb7-9704-09526793e2d2"
   flavor_id   = 2
   # this public key is set above in security section
-  key_pair  = "wellsaar"
+  key_pair  = var.public_key
   security_groups   = ["terraform_ssh_ping", "default"]
   count     = var.vm_number
   metadata = {
