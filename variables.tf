@@ -1,8 +1,14 @@
 variable "vm_number" {
-  default = "3"
+  default = "5"
 }
 variable "public_key" {
-  # replace this with the name of the public ssh key you uploaded to Jetstream 2
-  # https://docs.jetstream-cloud.org/ui/cli/managing-ssh-keys/
-  default = "!!! REPLACE ME WITH YOUR PUBLIC KEY NAME"
+  default = ""
+}
+
+variable "leader_flavor" {
+  default = "3"
+}
+
+variable "follower_flavor" {
+  default = "2"
 }
