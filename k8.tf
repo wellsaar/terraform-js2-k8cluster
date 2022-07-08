@@ -6,20 +6,19 @@
 resource "openstack_compute_instance_v2" "Ubuntu20_leader" {
   name = "terraform_Ubuntu20_leader"
   # ID of JS-API-Featured-Ubuntu20-Latest
-  image_id  = "69b7fce4-3bfd-467e-bc5e-13e08ac44490"
-  flavor_id   = 3
+  image_name = "Featured-Ubuntu20"
+  flavor_id   = var.leader_flavor
   # you'll need to set this to your public key name on jetstream
   key_pair  = var.public_key
   security_groups   = ["terraform_ssh_ping", "default"]
   metadata = {
     terraform_controlled = "yes"
     ansible_role = "leader"
+    terrform_role = "k8"
   }
   network {
-    name = "terraform_network"
+    name = "auto_allocated_network"
   }
-  depends_on = [openstack_networking_network_v2.terraform_network]
-
 }
 
 resource "openstack_networking_floatingip_v2" "terraform_floatip_ubuntu20_leader" {
@@ -38,8 +37,8 @@ resource "openstack_compute_floatingip_associate_v2" "terraform_floatubntu20_lea
 resource "openstack_compute_instance_v2" "Ubuntu20_follower" {
   name = "terraform_Ubuntu20_follower${count.index}"
   # ID of JS-API-Featured-Ubuntu20-Latest
-  image_id  = "69b7fce4-3bfd-467e-bc5e-13e08ac44490"
-  flavor_id   = 2
+  image_name = "Featured-Ubuntu20"
+  flavor_id   = var.follower_flavor
   # this public key is set above in security section
   key_pair  = var.public_key
   security_groups   = ["terraform_ssh_ping", "default"]
@@ -47,12 +46,11 @@ resource "openstack_compute_instance_v2" "Ubuntu20_follower" {
   metadata = {
     terraform_controlled = "yes"
     ansible_role = "follower"
+    terrform_role = "k8"
   }
   network {
-    name = "terraform_network"
+    name = "auto_allocated_network"
   }
-  depends_on = [openstack_networking_network_v2.terraform_network]
-
 }
 # creating floating ip from the public ip pool
 resource "openstack_networking_floatingip_v2" "terraform_floatip_ubuntu20_follower" {
